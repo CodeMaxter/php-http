@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Esta clase permite obtener un documento html hubicado en URL específica
+ * This class allows to make HTTP requests
  *
- * @author Alvaro José agámez Licha
- * @version 1.1
+ * @author Alvaro José agámez Licha - @CodeMaxter
+ * @version 0.2
  */
 class Http
 {
