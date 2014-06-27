@@ -147,7 +147,6 @@ class Http
 
         // build the options
         $options = $this->buildOptions($options);
-//        print_r($options);die;
 
         // set the curl options
         curl_setopt_array($curl, $options);
