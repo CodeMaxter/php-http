@@ -5,7 +5,7 @@ A very simple HTTP client based in PHP curl functions
 
 # TODO:
 
- * ~~~Add the HTTP header option to the option map (CURLOPT_HTTPHEADER)~~~
+ * ~~Add the HTTP header option to the option map (CURLOPT_HTTPHEADER)~~
  * Make a cool description of the class in the README
  * Document the protected methods
  * Implement the put and delete methods
