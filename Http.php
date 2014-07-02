@@ -24,15 +24,16 @@ class Http
 
         $this->optionMap = [
             'auth' => CURLOPT_USERPWD,
-            'post' => CURLOPT_POST,
             'data' => CURLOPT_POSTFIELDS,
-            'timeout' => CURLOPT_CONNECTTIMEOUT,
+            'header' => CURLOPT_HTTPHEADER,
+            'post' => CURLOPT_POST,
             'returnHeader' => CURLOPT_HEADER,
             'returnTransfer' => CURLOPT_RETURNTRANSFER,
-            'url' => CURLOPT_URL,
-            'userAgent' => CURLOPT_USERAGENT,
             'sslVerifyHost' => CURLOPT_SSL_VERIFYHOST,
             'sslVerifyPeer' => CURLOPT_SSL_VERIFYPEER,
+            'timeout' => CURLOPT_CONNECTTIMEOUT,
+            'url' => CURLOPT_URL,
+            'userAgent' => CURLOPT_USERAGENT,
         ];
     }
 
