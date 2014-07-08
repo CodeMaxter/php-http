@@ -6,7 +6,10 @@ $client = new Http();
 //$url = 'https://api.github.com/users/CodeMaxter/repos';
 $url = 'http://localhost:8000/server.php';
 
-$data = ['type' => 'owner'];
+$data = [
+    'type' => 'owner',
+    'otherData' => 'more data',
+];
 
 $options = [
     'timeout' => 30,

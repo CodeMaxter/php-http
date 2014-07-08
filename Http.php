@@ -3,7 +3,7 @@
 /**
  * This class allows to make HTTP requests
  *
- * @author Alvaro José agámez Licha - @CodeMaxter
+ * @author Alvaro José Agámez Licha - @CodeMaxter
  * @version 0.2
  */
 class Http
@@ -24,6 +24,7 @@ class Http
 
         $this->optionMap = [
             'auth' => CURLOPT_USERPWD,
+            'customHeader' => CURLOPT_CUSTOMREQUEST,
             'data' => CURLOPT_POSTFIELDS,
             'header' => CURLOPT_HTTPHEADER,
             'post' => CURLOPT_POST,
@@ -37,16 +38,12 @@ class Http
         ];
     }
 
-    protected function buildQuery($data)
-    {
-        $query = [];
-        foreach ($data as $key => $value) {
-            $query[] = $key . '=' . urlencode($value);
-        }
-        return implode('&', $query);
-    }
-
-    protected function buildOptions($options)
+    /**
+     * 
+     * @param array $options
+     * @return array
+     */
+    protected function buildOptions(array $options)
     {
         $result = [];
         foreach ($options as $key => $value) {
@@ -60,6 +57,11 @@ class Http
         return $result;
     }
 
+    /**
+     * 
+     * @param string $url
+     * @throws Exception
+     */
     protected function validateUrl($url)
     {
         // throw some nice exception
@@ -70,6 +72,40 @@ class Http
         if (!filter_var($url, FILTER_VALIDATE_URL)){
             throw new Exception("Invalid URL");
         }
+    }
+
+    /**
+     * 
+     * @param string $url
+     * @param array $data
+     * @param array $options
+     * @return string
+     */
+    protected function request($url, array $data = [], array $options = [])
+    {
+        // validate url
+        $this->validateUrl($url);
+
+        // set the request url
+        $options['url'] = $url;
+
+        // init the curl session
+        $curl = curl_init();
+
+        // build the options
+        $requestOptions = $this->buildOptions($options);
+//        var_dump($requestOptions);die;
+
+        // set the curl options
+        curl_setopt_array($curl, $requestOptions);
+
+        // execute the curl request
+        $response = curl_exec($curl);
+
+        // very important, close the curl request after complete
+        curl_close($curl);
+
+        return $response;
     }
 
     /**
@@ -89,14 +125,13 @@ class Http
         $curl = curl_init();
 
         // build query params from array data
-        $query = $this->buildQuery($data);
+        $query = http_build_query($data);
 
         // build the complete url with the query params
         $url .= $query !== '' ? '?' . $query : '';
 
         // merge default options  with the user options for get request
         $options = array_merge($this->defaultOptions, $options);
-        $options['url'] = $url;
 
         // If scheme is https we need two more curl options
         $scheme = parse_url($url)['scheme'];
@@ -105,19 +140,8 @@ class Http
             $options['sslVerifyPeer'] = false;
         }
 
-        // build the options
-        $options = $this->buildOptions($options);
-
-        // set the curl options
-        curl_setopt_array($curl, $options);
-
-        // execute the curl request
-        $response = curl_exec($curl);
-
-        // very important, close the curl request after complete
-        curl_close($curl);
-
-        return $response;
+        $requestOptions = array_merge($this->defaultOptions, $options);
+        return $this->request($url, $data, $requestOptions);
     }
 
     /**
@@ -128,36 +152,41 @@ class Http
      */
     public function post($url, array $data, array $options = [])
     {
-        // validate url
-        $this->validateUrl($url);
-
-        // init the curl session
-        $curl = curl_init();
-
-        // merge default options  with the user options for get request
-        $options = array_merge($this->defaultOptions, $options);
-        $options['url'] = $url;
-
         // we set the post curl option to true
         $options['post'] = true;
 
         // if data is present, we set the data in the curl options
-        if (is_array($data) && count($data) > 0) {
-            $options['data'] = $data;
+        if (true === is_array($data) && count($data) > 0) {
+            $options['data'] = http_build_query($data);
         }
 
-        // build the options
-        $options = $this->buildOptions($options);
+        $requestOptions = array_merge($this->defaultOptions, $options);
+        return $this->request($url, $data, $requestOptions);
+    }
 
-        // set the curl options
-        curl_setopt_array($curl, $options);
+    public function put($url, array $data, array $options = [])
+    {
+        $options['customHeader'] = 'PUT';
 
-        // execute the curl request
-        $response = curl_exec($curl);
+        // if data is present, we set the data in the curl options
+        if (true === is_array($data) && count($data) > 0) {
+            $options['data'] = http_build_query($data);
+        }
 
-        // very important, close the curl request after complete
-        curl_close($curl);
+        $requestOptions = array_merge($this->defaultOptions, $options);
+        return $this->request($url, $data, $requestOptions);
+    }
 
-        return $response;
+    public function delete($url, array $data, array $options = [])
+    {
+        $options['customHeader'] = 'DELETE';
+
+        // if data is present, we set the data in the curl options
+        if (true === is_array($data) && count($data) > 0) {
+            $options['data'] = http_build_query($data);
+        }
+
+        $requestOptions = array_merge($this->defaultOptions, $options);
+        return $this->request($url, $data, $requestOptions);
     }
 }
