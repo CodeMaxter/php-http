@@ -13,9 +13,7 @@ $data = [
 
 $options = [
     'timeout' => 30,
-    'returnHeader' => true,
 ];
 
-$response = $client->get($url, $data, $options);
-echo $response . "\n\n";
-var_dump($client->getHeaders());
+$response = $client->head($url, $data, $options);
+var_dump($response);

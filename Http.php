@@ -8,6 +8,8 @@
  */
 class Http
 {
+    
+    private $headers = null;
 
     protected $defaultOptions = null;
 
@@ -27,6 +29,7 @@ class Http
             'customHeader' => CURLOPT_CUSTOMREQUEST,
             'data' => CURLOPT_POSTFIELDS,
             'header' => CURLOPT_HTTPHEADER,
+            'noBody' => CURLOPT_NOBODY,
             'post' => CURLOPT_POST,
             'returnHeader' => CURLOPT_HEADER,
             'returnTransfer' => CURLOPT_RETURNTRANSFER,
@@ -89,12 +92,16 @@ class Http
         // set the request url
         $options['url'] = $url;
 
+        // if data is present, we set the data in the curl options
+        if (true === is_array($data) && count($data) > 0) {
+            $options['data'] = http_build_query($data);
+        }
+
         // init the curl session
         $curl = curl_init();
 
         // build the options
         $requestOptions = $this->buildOptions($options);
-//        var_dump($requestOptions);die;
 
         // set the curl options
         curl_setopt_array($curl, $requestOptions);
@@ -105,7 +112,18 @@ class Http
         // very important, close the curl request after complete
         curl_close($curl);
 
-        return $response;
+        if (true === $options['returnHeader']) {
+            list($this->headers, $response) = explode("\r\n\r\n", $response, 2);
+        }
+        return trim($response);
+    }
+
+    public function delete($url, array $data, array $options = [])
+    {
+        $options['customHeader'] = 'DELETE';
+
+        $requestOptions = array_merge($this->defaultOptions, $options);
+        return $this->request($url, $data, $requestOptions);
     }
 
     /**
@@ -118,27 +136,81 @@ class Http
      */
     public function get($url, array $data = [], array $options = [])
     {
-        // validate url
-        $this->validateUrl($url);
-
-        // init the curl session
-        $curl = curl_init();
-
-        // build query params from array data
-        $query = http_build_query($data);
-
-        // build the complete url with the query params
-        $url .= $query !== '' ? '?' . $query : '';
-
-        // merge default options  with the user options for get request
-        $options = array_merge($this->defaultOptions, $options);
+        $defaultOptions = $this->defaultOptions;
 
         // If scheme is https we need two more curl options
-        $scheme = parse_url($url)['scheme'];
-        if ('https' === $scheme) {
-            $options['sslVerifyHost'] = false;
-            $options['sslVerifyPeer'] = false;
+        if ('https' === parse_url($url)['scheme']) {
+            $defaultOptions['sslVerifyHost'] = false;
+            $defaultOptions['sslVerifyPeer'] = false;
         }
+
+        // merge default options  with the user options for get request
+        $requestOptions = array_merge($defaultOptions, $options);
+
+        return $this->request($url, $data, $requestOptions);
+    }
+
+    public function getHeaders()
+    {
+        return $this->headers;
+    }
+
+        /**
+     * 
+     * @param string $url
+     * @param array $data
+     * @param array $options
+     * @return string
+     */
+    public function head($url, array $data = [], array $options = [])
+    {
+        $options['customHeader'] = 'HEAD';
+        $options['noBody'] = true;
+        $options['returnHeader'] = true;
+
+        $requestOptions = array_merge($this->defaultOptions, $options);
+        $this->request($url, $data, $requestOptions);
+        return $this->headers;
+    }
+
+    /**
+     * 
+     * @param string $url
+     * @param array $data
+     * @param array $options
+     * @return string
+     */
+    public function options($url, array $data = [], array $options = [])
+    {
+        $options['customHeader'] = 'OPTIONS';
+
+        $requestOptions = array_merge($this->defaultOptions, $options);
+        return $this->request($url, $data, $requestOptions);
+    }
+
+        /**
+     * 
+     * @param string $url
+     * @param array $data
+     * @param array $options
+     * @return string
+     */
+    public function patch($url, array $data = [], array $options = [])
+    {
+        return false;
+    }
+
+    /**
+     * 
+     * @param string $url
+     * @param array $data
+     * @param array $options
+     * @return string
+     */
+    public function post($url, array $data, array $options = [])
+    {
+        // we set the post curl option to true
+        $options['post'] = true;
 
         $requestOptions = array_merge($this->defaultOptions, $options);
         return $this->request($url, $data, $requestOptions);
@@ -149,44 +221,14 @@ class Http
      * @param string $url
      * @param array $data
      * @param array $options
+     * @return string
      */
-    public function post($url, array $data, array $options = [])
-    {
-        // we set the post curl option to true
-        $options['post'] = true;
-
-        // if data is present, we set the data in the curl options
-        if (true === is_array($data) && count($data) > 0) {
-            $options['data'] = http_build_query($data);
-        }
-
-        $requestOptions = array_merge($this->defaultOptions, $options);
-        return $this->request($url, $data, $requestOptions);
-    }
-
     public function put($url, array $data, array $options = [])
     {
         $options['customHeader'] = 'PUT';
 
-        // if data is present, we set the data in the curl options
-        if (true === is_array($data) && count($data) > 0) {
-            $options['data'] = http_build_query($data);
-        }
-
         $requestOptions = array_merge($this->defaultOptions, $options);
         return $this->request($url, $data, $requestOptions);
     }
 
-    public function delete($url, array $data, array $options = [])
-    {
-        $options['customHeader'] = 'DELETE';
-
-        // if data is present, we set the data in the curl options
-        if (true === is_array($data) && count($data) > 0) {
-            $options['data'] = http_build_query($data);
-        }
-
-        $requestOptions = array_merge($this->defaultOptions, $options);
-        return $this->request($url, $data, $requestOptions);
-    }
 }
